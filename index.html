@@ -1,138 +1,250 @@
 <!DOCTYPE html>
-<!-- OpenGeo 13: Squeezing sponge (TP2.7) - ANIMATION. Load a clay layer, press play; water escapes, layer compresses, settlement curve fills. Play/Pause/Reset. EN/FI, illustrative. -->
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Squeezing Sponge — OpenGeo</title>
+<!-- The squeezing sponge, OpenGeo basic tier (TP2.7).
+     Load a soft clay layer and press play. The water has to drain out before
+     the clay can compress, so settlement lags the load. Terzaghi 1D.
+     Values illustrative, set real ones with the substance expert. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Squeezing Sponge</title>
 <style>
-  :root{--bg:#f5f6f4;--panel:#fff;--ink:#1f2a24;--muted:#5d6b62;--line:#d8ddd6;--accent:#2f6f4f;
-        --clay:#bcae9a;--water:#2a7fb8;--load:#c0563b;--drain:#cdb892;}
-  *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45}
+  :root{
+    --bg:#f5f6f4; --panel:#fff; --ink:#1f2a24; --muted:#5d6b62; --line:#d8ddd6;
+    --accent:#2f6f4f; --clay:#bcae9a; --water:#2a7fb8; --load:#c0563b; --drain:#cdb892;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+       background:var(--bg);color:var(--ink);line-height:1.45}
   header{padding:18px 22px;border-bottom:1px solid var(--line);background:var(--panel)}
-  h1{font-size:1.15rem;margin:0 0 4px}header p{margin:0;color:var(--muted);font-size:.85rem}
+  h1{font-size:1.3rem;margin:0 0 4px;font-weight:700}
+  header p{margin:0;color:var(--muted);font-size:.85rem}
   .wrap{display:flex;flex-wrap:wrap;gap:18px;padding:18px;max-width:1180px;margin:0 auto}
-  .controls{flex:1 1 280px;min-width:260px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+  .controls{flex:1 1 320px;min-width:300px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}
   .stage{flex:2 1 600px;min-width:340px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
   canvas{width:100%;height:auto;display:block}
-  .group{margin-bottom:14px;padding-bottom:12px;border-bottom:1px dashed var(--line)}.group:last-child{border-bottom:none;margin-bottom:0}
-  .group h2{font-size:.82rem;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);margin:0 0 8px}
-  .how{font-size:.82rem;color:var(--muted)}
-  .readout{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:.9rem;font-variant-numeric:tabular-nums;margin-top:6px}.readout .k{color:var(--muted)}.readout .big{font-weight:700}
-  .seg{display:flex;gap:6px;flex-wrap:wrap}
-  .topbar{display:flex;gap:8px;justify-content:flex-end;margin-bottom:8px;flex-wrap:wrap}
-  button{font:inherit;font-size:.82rem;padding:6px 12px;border:1px solid var(--line);background:#fff;border-radius:7px;cursor:pointer;color:var(--ink)}
-  button:hover{border-color:var(--accent);color:var(--accent)}button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-  .note{font-size:.74rem;color:var(--muted);margin-top:10px}
-</style></head><body>
-<header><h1 id="title">The Squeezing Sponge</h1><p id="subtitle">Load soft clay and watch the water slowly escape as it settles — OpenGeo prototype (TP2.7)</p></header>
+  .group{margin-bottom:16px;padding-bottom:14px;border-bottom:1px dashed var(--line)}
+  .group:last-child{border-bottom:none;margin-bottom:0}
+  /* major headings: bold and a little larger */
+  .group h2{font-size:1rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);margin:0 0 10px}
+  .how{font-size:.9rem;color:var(--muted)}
+  /* results window: bigger, clearer */
+  .readout{display:grid;grid-template-columns:1fr auto;gap:10px 16px;font-variant-numeric:tabular-nums;margin-top:12px}
+  .readout .k{color:var(--muted);font-size:1rem;align-self:center}
+  .readout .v{font-size:1.15rem;font-weight:600;text-align:right;align-self:center}
+  .readout .big{font-size:1.7rem;font-weight:700;text-align:right;color:var(--accent)}
+  .seg{display:flex;gap:8px;flex-wrap:wrap}
+  .topbar{display:flex;gap:8px;justify-content:flex-end;margin-bottom:10px;flex-wrap:wrap}
+  button{font:inherit;font-size:.9rem;padding:8px 14px;border:1px solid var(--line);background:#fff;border-radius:7px;cursor:pointer;color:var(--ink)}
+  button:hover{border-color:var(--accent);color:var(--accent)}
+  button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .note{font-size:.76rem;color:var(--muted);margin-top:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">The Squeezing Sponge</h1>
+  <p id="subtitle">Load soft clay and watch the water slowly escape as it settles. OpenGeo (TP2.7)</p>
+</header>
+
 <div class="wrap">
   <div class="controls">
     <div class="topbar"><button id="langBtn">Suomeksi</button></div>
+
     <div class="group"><h2 id="hHow">How it works</h2><p class="how" id="howTxt"></p></div>
+
     <div class="group"><h2 id="hDr">Drainage</h2>
       <div class="seg"><button id="drDouble" class="on">Both sides</button><button id="drSingle">Top only</button></div></div>
+
     <div class="group"><h2 id="hPlay">Run</h2>
-      <div class="seg"><button id="playBtn">\u25b6 Load &amp; play</button><button id="resetBtn">Reset</button></div>
+      <div class="seg"><button id="playBtn">&#9654; Load &amp; play</button><button id="resetBtn">Reset</button></div>
       <div class="readout" id="readout"></div></div>
-    <p class="note" id="note">Illustrative timing. The point is the process \u2014 load is instant, settlement is not.</p>
+
+    <p class="note" id="note">Illustrative timing. The point is the process. The load is instant, the settlement is not.</p>
   </div>
+
   <div class="stage"><canvas id="cv" width="1000" height="520"></canvas></div>
 </div>
+
 <script>
 "use strict";
+
 let drainage="double", lang="en", playing=false, U=0, tYears=0, last=0;
-const CV=8, H=6;                       // m2/yr, clay thickness (illustrative)
-const Sult=0.45;                       // m ultimate settlement (illustrative)
-function Hdr(){return drainage==="double"?H/2:H;}
-function tEnd(){return 2.0*Hdr()*Hdr()/CV;}
-function Uof(Tv){if(Tv<=0)return 0;if(Tv<0.2827)return Math.sqrt(4*Tv/Math.PI);return Math.min(0.999,1-0.01*Math.pow(10,(1.781-Tv)/0.933));}
-function Uat(t){return Uof(CV*t/(Hdr()*Hdr()));}
-const T={en:{title:"The Squeezing Sponge",
-   subtitle:"Load soft clay and watch the water slowly escape as it settles — OpenGeo prototype (TP2.7)",
-   hHow:"How it works", howTxt:"Press \u201cLoad & play\u201d. The load lands instantly, but the trapped water has to squeeze out toward the draining edges before the clay can compress. Watch the water dots leave and the layer thin. Pause any time, or reset.",
-   hDr:"Drainage", both:"Both sides", top:"Top only", hPlay:"Run", play:"\u25b6 Load & play", pause:"\u275a\u275a Pause", reset:"Reset",
-   note:"Illustrative timing. The point is the process \u2014 load is instant, settlement is not.",
-   langBtn:"Suomeksi", time:"Time", cons:"Consolidation U", settle:"Settlement", of:"of", load:"load applied", curveT:"Settlement over time", years:"yr"},
+const CV=8, H=6;       // m2/yr, clay thickness, illustrative
+const Sult=0.45;       // m, final settlement, illustrative
+
+function Hdr(){ return drainage==="double" ? H/2 : H; }
+function tEnd(){ return 2.0*Hdr()*Hdr()/CV; }
+
+// Terzaghi U(Tv), the usual two-branch fit
+function Uof(Tv){
+  if(Tv<=0) return 0;
+  if(Tv<0.2827) return Math.sqrt(4*Tv/Math.PI);
+  return Math.min(0.999, 1 - 0.01*Math.pow(10,(1.781-Tv)/0.933));
+}
+function Uat(t){ return Uof(CV*t/(Hdr()*Hdr())); }
+
+const T={
+ en:{title:"The Squeezing Sponge",
+     subtitle:"Load soft clay and watch the water slowly escape as it settles. OpenGeo (TP2.7)",
+     hHow:"How it works",
+     howTxt:"Press Load and play. The load lands instantly, but the trapped water has to squeeze out toward the draining edges before the clay can compress. Watch the water leave and the layer thin. Pause any time, or reset.",
+     hDr:"Drainage", both:"Both sides", top:"Top only", hPlay:"Run",
+     play:"\u25b6 Load & play", pause:"\u275a\u275a Pause", reset:"Reset",
+     note:"Illustrative timing. The point is the process. The load is instant, the settlement is not.",
+     langBtn:"Suomeksi", time:"Time", cons:"Consolidation, U", settle:"Settlement", of:"of",
+     load:"load applied", curveT:"Settlement over time", years:"yr"},
  fi:{title:"Puristuva sieni",
-   subtitle:"Kuormita pehme\u00e4\u00e4 savea ja katso veden hitaasti poistuvan painuessa — OpenGeo-prototyyppi (TP2.7)",
-   hHow:"N\u00e4in se toimii", howTxt:"Paina \u201cKuormita & toista\u201d. Kuorma tulee heti, mutta loukkuun j\u00e4\u00e4nyt vesi joutuu puristumaan ulos kuivuville reunoille ennen kuin savi voi tiivisty\u00e4. Katso vesipisteiden poistuvan ja kerroksen ohenevan. Voit tauottaa tai nollata.",
-   hDr:"Vedenpoisto", both:"Molemmat", top:"Vain yl\u00e4", hPlay:"Aja", play:"\u25b6 Kuormita & toista", pause:"\u275a\u275a Tauko", reset:"Nollaa",
-   note:"Havainnollistava ajoitus. Olennaista on prosessi \u2014 kuorma on heti, painuma ei.",
-   langBtn:"In English", time:"Aika", cons:"Konsolidaatio U", settle:"Painuma", of:"/", load:"kuorma kohdistettu", curveT:"Painuma ajan myöt\u00e4", years:"v"}};
-const cv=document.getElementById("cv"),ctx=cv.getContext("2d");
+     subtitle:"Kuormita pehme\u00e4\u00e4 savea ja katso veden hitaasti poistuvan painuessa. OpenGeo (TP2.7)",
+     hHow:"N\u00e4in se toimii",
+     howTxt:"Paina Kuormita. Kuorma tulee heti, mutta loukkuun j\u00e4\u00e4nyt vesi joutuu puristumaan ulos kuivuville reunoille ennen kuin savi voi tiivisty\u00e4. Katso veden poistuvan ja kerroksen ohenevan. Voit tauottaa tai nollata.",
+     hDr:"Vedenpoisto", both:"Molemmat", top:"Vain yl\u00e4", hPlay:"Aja",
+     play:"\u25b6 Kuormita", pause:"\u275a\u275a Tauko", reset:"Nollaa",
+     note:"Havainnollistava ajoitus. Olennaista on prosessi. Kuorma on heti, painuma ei.",
+     langBtn:"In English", time:"Aika", cons:"Konsolidaatio, U", settle:"Painuma", of:"/",
+     load:"kuorma", curveT:"Painuma ajan myöt\u00e4", years:"v"}
+};
+
+const cv=document.getElementById("cv"), ctx=cv.getContext("2d");
 const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-// water particles
-let parts=[];
-function initParts(){parts=[];for(let i=0;i<70;i++)parts.push({x:Math.random(),y:Math.random(),gone:false});}
-initParts();
-const BX=90,BY=120,BW=300,BH=300;     // clay block region (pixels)
-function draw(){const t=T[lang];ctx.clearRect(0,0,cv.width,cv.height);
-  const settlePx=U*Sult/0.6*60;        // exaggerated visual drop
-  const topY=BY+settlePx, curBH=BH-settlePx;
+
+// pore-water dots, scattered through the clay. each leaves once U passes its rank.
+let dots=[];
+function seedDots(){ dots=[]; for(let i=0;i<70;i++) dots.push({x:Math.random(), y:Math.random(), rank:Math.random()}); }
+seedDots();
+
+const BX=90, BY=120, BW=300, BH=300;   // clay block in pixels
+
+function draw(){
+  const t=T[lang];
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const drop=U*Sult/0.6*60;            // exaggerate the drop so it's visible
+  const topY=BY+drop, curBH=BH-drop;
+
   // load arrows
-  ctx.strokeStyle=css("--load");ctx.fillStyle=css("--load");ctx.lineWidth=2.5;
-  for(let i=0;i<5;i++){const ax=BX+25+i*(BW-50)/4;ctx.beginPath();ctx.moveTo(ax,topY-34);ctx.lineTo(ax,topY-8);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(ax-4,topY-15);ctx.lineTo(ax,topY-8);ctx.lineTo(ax+4,topY-15);ctx.fill();}
-  ctx.lineWidth=1;ctx.font="12px system-ui";ctx.textAlign="center";ctx.fillText(t.load,BX+BW/2,topY-40);
-  // original outline (dashed) to show settlement
-  ctx.strokeStyle=css("--load");ctx.setLineDash([4,3]);ctx.strokeRect(BX,BY,BW,2);ctx.setLineDash([]);
-  // clay block
-  ctx.fillStyle=css("--clay");ctx.fillRect(BX,topY,BW,curBH);
-  ctx.strokeStyle="#9aa499";ctx.strokeRect(BX,topY,BW,curBH);
-  // drainage boundaries (porous = sand)
-  ctx.fillStyle=css("--drain");ctx.fillRect(BX,topY-7,BW,7);
-  ctx.fillStyle=drainage==="double"?css("--drain"):"#9b8e78";ctx.fillRect(BX,topY+curBH,BW,7);
-  ctx.fillStyle=css("--muted");ctx.font="10px system-ui";ctx.textAlign="center";
-  ctx.fillText(drainage==="double"?"\u2191 drains":"\u2191 drains",BX+BW/2,topY-10);
-  ctx.fillText(drainage==="double"?"\u2193 drains":"impermeable",BX+BW/2,topY+curBH+18);
-  // water particles: a fraction (U) have left; remaining drift toward nearest drain
-  parts.forEach(p=>{
-    const px=BX+8+p.x*(BW-16);
-    let py=topY+8+p.y*(curBH-16);
-    const left = p.idx===undefined ? (p.left=Math.random()<0.5) : p.left;
-    if(p.rank===undefined)p.rank=Math.random();
-    const visible = p.rank > U;        // higher-rank leave as U grows
-    if(visible){ctx.fillStyle=css("--water");ctx.beginPath();ctx.arc(px,py,3,0,2*Math.PI);ctx.fill();}
-    else{ // escaping arrow near boundary
-    }
-  });
-  // escaping arrows at boundaries scaled by current rate
-  if(playing||U>0&&U<0.999){ctx.strokeStyle=css("--water");ctx.lineWidth=1.5;
-    const n=3;for(let i=0;i<n;i++){const ax=BX+BW*(i+1)/(n+1);
-      arrowUp(ax,topY-2);if(drainage==="double")arrowDown(ax,topY+curBH+2);}ctx.lineWidth=1;}
-  // settlement-time curve (right)
-  drawCurve();updatePanel();}
-function arrowUp(x,y){ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y-12);ctx.stroke();ctx.beginPath();ctx.moveTo(x-3,y-7);ctx.lineTo(x,y-12);ctx.lineTo(x+3,y-7);ctx.fillStyle=css("--water");ctx.fill();}
-function arrowDown(x,y){ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y+12);ctx.stroke();ctx.beginPath();ctx.moveTo(x-3,y+7);ctx.lineTo(x,y+12);ctx.lineTo(x+3,y+7);ctx.fillStyle=css("--water");ctx.fill();}
-function drawCurve(){const t=T[lang];const PX=480,PY=120,PW=440,PH=300;const Te=tEnd();
-  ctx.fillStyle=css("--ink");ctx.font="12px system-ui";ctx.textAlign="center";ctx.fillText(t.curveT,PX+PW/2,PY-14);
-  ctx.strokeStyle=css("--line");ctx.strokeRect(PX,PY,PW,PH);
-  ctx.fillStyle=css("--muted");ctx.font="10px system-ui";
-  for(let i=0;i<=5;i++){const tt=Te*i/5;ctx.strokeStyle="#eef1ee";ctx.beginPath();ctx.moveTo(PX+PW*i/5,PY);ctx.lineTo(PX+PW*i/5,PY+PH);ctx.stroke();
-    ctx.fillStyle=css("--muted");ctx.textAlign="center";ctx.fillText(tt.toFixed(1),PX+PW*i/5,PY+PH+14);
-    ctx.beginPath();ctx.moveTo(PX,PY+PH*i/5);ctx.lineTo(PX+PW,PY+PH*i/5);ctx.stroke();
-    ctx.textAlign="right";ctx.fillText((Sult*i/5).toFixed(2),PX-4,PY+PH*i/5+3);}
-  ctx.strokeStyle=css("--load");ctx.lineWidth=2.4;ctx.beginPath();
-  for(let i=0;i<=200;i++){const tt=Te*i/200,ss=Uat(tt)*Sult;const x=PX+tt/Te*PW,y=PY+ss/Sult*PH;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}ctx.stroke();ctx.lineWidth=1;
-  // current marker
-  const cx=PX+Math.min(tYears,Te)/Te*PW, cy=PY+(U)*PH;
-  ctx.fillStyle=css("--load");ctx.beginPath();ctx.arc(cx,cy,5,0,2*Math.PI);ctx.fill();
-  ctx.fillStyle=css("--ink");ctx.font="11px system-ui";ctx.textAlign="center";ctx.fillText(t.settle+" (m)",PX-40,PY-14);
-  ctx.fillText(t.time+" ("+t.years+")",PX+PW/2,PY+PH+30);}
-function updatePanel(){const t=T[lang];document.getElementById("readout").innerHTML=
-  `<span class="k">${t.time}</span><span>${tYears.toFixed(2)} ${t.years}</span>`+
-  `<span class="k">${t.cons}</span><span class="big">${(U*100).toFixed(0)} %</span>`+
-  `<span class="k">${t.settle}</span><span>${(U*Sult).toFixed(3)} ${t.of} ${Sult.toFixed(2)} m</span>`;}
+  ctx.strokeStyle=css("--load"); ctx.fillStyle=css("--load"); ctx.lineWidth=2.5;
+  for(let i=0;i<5;i++){ const ax=BX+25+i*(BW-50)/4;
+    ctx.beginPath(); ctx.moveTo(ax,topY-36); ctx.lineTo(ax,topY-9); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ax-4,topY-16); ctx.lineTo(ax,topY-9); ctx.lineTo(ax+4,topY-16); ctx.fill(); }
+  ctx.lineWidth=1; ctx.font="bold 14px system-ui"; ctx.textAlign="center";
+  ctx.fillText(t.load, BX+BW/2, topY-42);
+
+  // original top, dashed, so the settlement reads
+  ctx.strokeStyle=css("--load"); ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(BX,BY); ctx.lineTo(BX+BW,BY); ctx.stroke(); ctx.setLineDash([]);
+
+  // clay
+  ctx.fillStyle=css("--clay"); ctx.fillRect(BX,topY,BW,curBH);
+  ctx.strokeStyle="#9aa499"; ctx.strokeRect(BX,topY,BW,curBH);
+
+  // draining boundaries (sand top, sand or rock bottom)
+  ctx.fillStyle=css("--drain"); ctx.fillRect(BX,topY-8,BW,8);
+  ctx.fillStyle = drainage==="double" ? css("--drain") : "#9b8e78";
+  ctx.fillRect(BX,topY+curBH,BW,8);
+  ctx.fillStyle=css("--muted"); ctx.font="12px system-ui"; ctx.textAlign="center";
+  ctx.fillText("\u2191 drains", BX+BW/2, topY-12);
+  ctx.fillText(drainage==="double" ? "\u2193 drains" : "impermeable", BX+BW/2, topY+curBH+20);
+
+  // remaining pore water
+  for(const d of dots){
+    if(d.rank<=U) continue;
+    const px=BX+8+d.x*(BW-16), py=topY+8+d.y*(curBH-16);
+    ctx.fillStyle=css("--water");
+    ctx.beginPath(); ctx.arc(px,py,3,0,2*Math.PI); ctx.fill();
+  }
+
+  // escape arrows at the boundaries while draining
+  if(U>0 && U<0.99){
+    for(let i=1;i<=3;i++){ const ax=BX+BW*i/4;
+      arrowUp(ax,topY-2); if(drainage==="double") arrowDown(ax,topY+curBH+2); }
+  }
+
+  drawCurve();
+  updatePanel();
+}
+
+function arrowUp(x,y){ ctx.strokeStyle=css("--water"); ctx.fillStyle=css("--water"); ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,y-12); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x-3,y-7); ctx.lineTo(x,y-12); ctx.lineTo(x+3,y-7); ctx.fill(); ctx.lineWidth=1; }
+function arrowDown(x,y){ ctx.strokeStyle=css("--water"); ctx.fillStyle=css("--water"); ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,y+12); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x-3,y+7); ctx.lineTo(x,y+12); ctx.lineTo(x+3,y+7); ctx.fill(); ctx.lineWidth=1; }
+
+function drawCurve(){
+  const t=T[lang];
+  const PX=480, PY=120, PW=440, PH=300, Te=tEnd();
+  ctx.fillStyle=css("--ink"); ctx.font="bold 14px system-ui"; ctx.textAlign="center";
+  ctx.fillText(t.curveT, PX+PW/2, PY-16);
+  ctx.strokeStyle=css("--line"); ctx.strokeRect(PX,PY,PW,PH);
+
+  ctx.font="11px system-ui";
+  for(let i=0;i<=5;i++){
+    ctx.strokeStyle="#eef1ee";
+    ctx.beginPath(); ctx.moveTo(PX+PW*i/5,PY); ctx.lineTo(PX+PW*i/5,PY+PH); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(PX,PY+PH*i/5); ctx.lineTo(PX+PW,PY+PH*i/5); ctx.stroke();
+    ctx.fillStyle=css("--muted"); ctx.textAlign="center";
+    ctx.fillText((Te*i/5).toFixed(1), PX+PW*i/5, PY+PH+15);
+    ctx.textAlign="right";
+    ctx.fillText((Sult*i/5).toFixed(2), PX-5, PY+PH*i/5+3);
+  }
+
+  ctx.strokeStyle=css("--load"); ctx.lineWidth=2.4; ctx.beginPath();
+  for(let i=0;i<=200;i++){ const tt=Te*i/200, ss=Uat(tt)*Sult;
+    const x=PX+tt/Te*PW, y=PY+ss/Sult*PH; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); }
+  ctx.stroke(); ctx.lineWidth=1;
+
+  const cx=PX+Math.min(tYears,Te)/Te*PW, cy=PY+U*PH;
+  ctx.fillStyle=css("--load"); ctx.beginPath(); ctx.arc(cx,cy,5,0,2*Math.PI); ctx.fill();
+
+  ctx.fillStyle=css("--ink"); ctx.font="bold 13px system-ui"; ctx.textAlign="center";
+  ctx.fillText(t.settle+" (m)", PX-42, PY-16);
+  ctx.fillText(t.time+" ("+t.years+")", PX+PW/2, PY+PH+32);
+}
+
+function updatePanel(){
+  const t=T[lang];
+  document.getElementById("readout").innerHTML =
+    `<span class="k">${t.cons}</span><span class="big">${(U*100).toFixed(0)} %</span>`+
+    `<span class="k">${t.time}</span><span class="v">${tYears.toFixed(2)} ${t.years}</span>`+
+    `<span class="k">${t.settle}</span><span class="v">${(U*Sult).toFixed(3)} ${t.of} ${Sult.toFixed(2)} m</span>`;
+}
+
 const playBtn=document.getElementById("playBtn");
-function setPlayLabel(){playBtn.textContent=playing?T[lang].pause:T[lang].play;playBtn.classList.toggle("on",playing);}
-playBtn.addEventListener("click",()=>{playing=!playing;setPlayLabel();if(playing){if(tYears>=tEnd())tYears=0;last=performance.now();requestAnimationFrame(tick);}});
-function tick(now){if(!playing)return;const dt=(now-last)/1000;last=now;const Te=tEnd();
-  tYears+=dt*(Te/7);if(tYears>=Te){tYears=Te;playing=false;setPlayLabel();}U=Uat(tYears);draw();if(playing)requestAnimationFrame(tick);}
-document.getElementById("resetBtn").addEventListener("click",()=>{playing=false;tYears=0;U=0;setPlayLabel();initParts();draw();});
-function setDr(d){drainage=d;document.getElementById("drDouble").classList.toggle("on",d==="double");document.getElementById("drSingle").classList.toggle("on",d==="single");
-  playing=false;tYears=0;U=0;setPlayLabel();draw();}
+function setPlayLabel(){ playBtn.innerHTML = playing?T[lang].pause:T[lang].play; playBtn.classList.toggle("on",playing); }
+
+playBtn.addEventListener("click",()=>{
+  playing=!playing; setPlayLabel();
+  if(playing){ if(tYears>=tEnd()) tYears=0; last=performance.now(); requestAnimationFrame(tick); }
+});
+function tick(now){
+  if(!playing) return;
+  const dt=(now-last)/1000; last=now; const Te=tEnd();
+  tYears+=dt*(Te/7);
+  if(tYears>=Te){ tYears=Te; playing=false; setPlayLabel(); }
+  U=Uat(tYears); draw();
+  if(playing) requestAnimationFrame(tick);
+}
+document.getElementById("resetBtn").addEventListener("click",()=>{ playing=false; tYears=0; U=0; setPlayLabel(); seedDots(); draw(); });
+
+function setDr(d){
+  drainage=d;
+  document.getElementById("drDouble").classList.toggle("on", d==="double");
+  document.getElementById("drSingle").classList.toggle("on", d==="single");
+  playing=false; tYears=0; U=0; setPlayLabel(); draw();
+}
 document.getElementById("drDouble").addEventListener("click",()=>setDr("double"));
 document.getElementById("drSingle").addEventListener("click",()=>setDr("single"));
-document.getElementById("langBtn").addEventListener("click",()=>{lang=lang==="en"?"fi":"en";applyLang();setPlayLabel();draw();});
-function applyLang(){const t=T[lang];document.documentElement.lang=lang;const s=(id,x)=>{const el=document.getElementById(id);if(el)el.textContent=x;};
-  s("title",t.title);s("subtitle",t.subtitle);s("hHow",t.hHow);s("howTxt",t.howTxt);s("hDr",t.hDr);s("drDouble",t.both);s("drSingle",t.top);s("hPlay",t.hPlay);s("resetBtn",t.reset);s("note",t.note);s("langBtn",t.langBtn);}
-applyLang();setPlayLabel();draw();
-</script></body></html>
+
+document.getElementById("langBtn").addEventListener("click",()=>{ lang=lang==="en"?"fi":"en"; applyLang(); setPlayLabel(); draw(); });
+function applyLang(){
+  const t=T[lang]; document.documentElement.lang=lang;
+  const s=(id,x)=>{const el=document.getElementById(id); if(el) el.textContent=x;};
+  s("title",t.title); s("subtitle",t.subtitle); s("hHow",t.hHow); s("howTxt",t.howTxt);
+  s("hDr",t.hDr); s("drDouble",t.both); s("drSingle",t.top); s("hPlay",t.hPlay);
+  s("resetBtn",t.reset); s("note",t.note); s("langBtn",t.langBtn);
+}
+
+applyLang(); setPlayLabel(); draw();
+</script>
+</body>
+</html>
